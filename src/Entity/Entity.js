@@ -26,18 +26,28 @@ class Entity {
     this.components[component.type] = component;
   }
 
+  addComponents(components) {
+    if (!Array.isArray(components)) return;
+    components.forEach(component => this.addComponent(component));
+  }
+
   hasComponent(component) {
     if (!Component.isValidComponent(component)) return false;
     return this.hasComponentOfType(component.type);
   }
 
+  hasComponents(components) {
+    if (!Array.isArray(components)) return false;
+    return components.every(component => this.hasComponent(component));
+  }
+
   hasComponentOfType(type) {
-    return typeof this.components[type] !== 'undefined';
+    return typeof type === 'string' && typeof this.components[type] !== 'undefined';
   }
 
   hasComponentsOfTypes(types) {
     if (!Array.isArray(types)) return false;
-    return types.reduce((result, type) => result && this.hasComponentOfType(type), true);
+    return types.every(type => this.hasComponentOfType(type));
   }
 
   getComponentOfType(type) {
@@ -58,6 +68,11 @@ class Entity {
   removeComponentOfType(type) {
     if (!this.hasComponentOfType(type)) return;
     this.components[type] = undefined;
+  }
+
+  removeComponentsOfTypes(types) {
+    if (!Array.isArray(types)) return;
+    types.forEach(type => this.removeComponentOfType(type));
   }
 }
 

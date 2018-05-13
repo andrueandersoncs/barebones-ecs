@@ -2,6 +2,11 @@
 
 A barebones Entity Component System.
 
+# Installation
+
+1. Clone the code
+2. `lib` folder contains the framework, simply `const Component = include('lib/Component');`
+
 # Usage
 
 Simply create an instance of Engine:
@@ -15,6 +20,15 @@ const engine = new Engine(entities, systems);
 ```
 
 Then call `engine.start();`
+
+# Contribution
+
+1. `git clone` the repo
+2. `npm install` at the base directory
+3. Make your changes to the `src/` files
+4. Test each new interface *especially members of any new classes* (please see goals to ensure the highest chance that your contribution will be accepted)
+5. `npm run test` to build the `lib/` files and run the tests
+6. Optionally, to only build the `lib/` files, run `npm run build`
 
 # Goals
 

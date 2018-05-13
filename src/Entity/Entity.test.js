@@ -75,6 +75,34 @@ describe('addComponent', () => {
   });
 });
 
+describe('addComponents', () => {
+  test('only accepts an array of components', () => {
+    const entity = new Entity();
+    const invalidComponentsArray = { a: 'a', b: 'b' };
+    const numComponentsBefore = Object.keys(entity.components).length;
+    entity.addComponents(invalidComponentsArray);
+    const numComponentsAfter = Object.keys(entity.components).length;
+    expect(numComponentsBefore).toEqual(numComponentsAfter);
+  });
+
+  test('does not add invalid components', () => {
+    const entity = new Entity();
+    const invalidComponents = [{}, {}, {}];
+    const numComponentsBefore = Object.keys(entity.components).length;
+    entity.addComponents(invalidComponents);
+    const numComponentsAfter = Object.keys(entity.components).length;
+    expect(numComponentsBefore).toEqual(numComponentsAfter);
+  });
+
+  test('adds all valid components', () => {
+    const entity = new Entity();
+    const validComponentA = new Component('testComponentA', {});
+    const validComponentB = new Component('testComponentB', {});
+    entity.addComponents([validComponentA, validComponentB]);
+    expect(entity.hasComponents([validComponentA, validComponentB])).toBe(true);
+  });
+});
+
 describe('hasComponent', () => {
   test('returns true if entity has component', () => {
     const entity = new Entity();
@@ -116,3 +144,33 @@ describe('hasComponentOfType', () => {
   });
 });
 
+describe('hasComponentsOfTypes', () => {
+  test('only accepts array of types', () => {
+    const entity = new Entity();
+    const invalidTypesNonArray = { a: 'a', b: 'b' };
+    expect(entity.hasComponentsOfTypes(invalidTypesNonArray)).toBe(false);
+  });
+
+  test('returns true if entity has all types', () => {
+    const entity = new Entity();
+    const component = new Component('testComponent', {});
+    const otherComponent = new Component('otherTestComponent', {});
+    const validTypes = ['testComponent', 'otherTestComponent'];
+    entity.addComponents([component, otherComponent]);
+    expect(entity.hasComponentsOfTypes(validTypes)).toBe(true);
+  });
+
+  test('returns false if entity does not have every type', () => {
+    const entity = new Entity();
+    const component = new Component('testComponent', {});
+    const validTypes = ['testComponent', 'otherTestComponent'];
+    entity.addComponent(component);
+    expect(entity.hasComponentsOfTypes(validTypes)).toBe(false);
+  });
+
+  test('returns false if any types are invalid', () => {
+    const entity = new Entity();
+    const invalidTypes = [false, true, {}, 1234];
+    expect(entity.hasComponentsOfTypes(invalidTypes)).toBe(false);
+  });
+});
