@@ -65,6 +65,11 @@ class Entity {
     this.components[component.type] = undefined;
   }
 
+  removeComponents(components) {
+    if (!Array.isArray(components)) return;
+    components.forEach(component => this.removeComponent(component));
+  }
+
   removeComponentOfType(type) {
     if (!this.hasComponentOfType(type)) return;
     this.components[type] = undefined;

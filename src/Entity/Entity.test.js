@@ -15,6 +15,17 @@ describe('constructor', () => {
     expect(entity.id.length).toBeGreaterThan(0);
   });
 
+  test('generated ids are reasonably unique', () => {
+    let entities = new Array(100);
+    entities.fill(0);
+    entities = entities.map(() => new Entity());
+    for (let i = 0; i < entities.length; i++) {
+      for (let j = i + 1; j < entities.length; j++) {
+        expect(entities[i].id).not.toEqual(entities[j].id);
+      }
+    }
+  });
+
   test('accepts preexisting components', () => {
     const testComponent = new Component('testComponent');
     const testComponents = { testComponent };
@@ -124,6 +135,40 @@ describe('hasComponent', () => {
   });
 });
 
+describe('hasComponents', () => {
+  test('returns false if passed anything other than array', () => {
+    const entity = new Entity();
+    const invalidComponentArrayA = {};
+    const invalidComponentArrayB = false;
+    entity.addComponents(invalidComponentArrayA);
+    entity.addComponents(invalidComponentArrayB);
+    expect(entity.hasComponents(invalidComponentArrayA)).toBe(false);
+    expect(entity.hasComponents(invalidComponentArrayB)).toBe(false);
+  });
+
+  test('returns false if array contains anything other than valid components', () => {
+    const entity = new Entity();
+    const invalidComponent = {};
+    expect(entity.hasComponents([invalidComponent])).toBe(false);
+  });
+
+  test('returns false if entity does not have every component', () => {
+    const entity = new Entity();
+    const componentA = new Component('testComponentA', {});
+    const componentB = new Component('testComponentB', {});
+    entity.addComponent(componentA);
+    expect(entity.hasComponents([componentA, componentB])).toBe(false);
+  });
+
+  test('returns true if entity has every component', () => {
+    const entity = new Entity();
+    const componentA = new Component('testComponentA', {});
+    const componentB = new Component('testComponentB', {});
+    entity.addComponents([componentA, componentB]);
+    expect(entity.hasComponents([componentA, componentB])).toBe(true);
+  });
+});
+
 describe('hasComponentOfType', () => {
   test('returns true if entity has component of that type', () => {
     const entity = new Entity();
@@ -138,7 +183,7 @@ describe('hasComponentOfType', () => {
     expect(entity.hasComponentOfType(invalidType)).toBe(false);
   })
   
-  test('returns false if component does not have entity of type', () => {
+  test('returns false if entity does not have component of type', () => {
     const entity = new Entity();
     expect(entity.hasComponentOfType('testComponent')).toBe(false);
   });
@@ -174,3 +219,131 @@ describe('hasComponentsOfTypes', () => {
     expect(entity.hasComponentsOfTypes(invalidTypes)).toBe(false);
   });
 });
+
+describe('getComponentOfType', () => {
+  test('returns null if invalid type', () => {
+    const entity = new Entity();
+    const invalidType = false;
+    expect(entity.getComponentOfType(invalidType)).toBeNull();
+  });
+
+  test('returns null if does not have component of type', () => {
+    const entity = new Entity();
+    const validType = 'testComponent';
+    expect(entity.getComponentOfType(validType)).toBeNull();
+  });
+  
+  test('returns component of type if has component of type', () => {
+    const entity = new Entity();
+    const component = new Component('testComponent', {});
+    entity.addComponent(component);
+    expect(entity.getComponentOfType('testComponent')).toBe(component);
+  });
+});
+
+describe('getComponentsOfTypes', () => {
+  test('returns empty array if passed anything but an array', () => {
+    const entity = new Entity();
+    const invalidComponentTypeArray = { a: 'a', b: 'b' };
+    expect(entity.getComponentsOfTypes(invalidComponentTypeArray)).toEqual([]);
+  });
+
+  test('returns null for each type it does not have', () => {
+    const entity = new Entity();
+    const componentTypeArray = ['validTypeA', 'validTypeB', 'validTypeC'];
+    const expectedResult = [null, null, null];
+    expect(entity.getComponentsOfTypes(componentTypeArray)).toEqual(expectedResult);
+  });
+
+  test('returns components with matching types for types it does have', () => {
+    const entity = new Entity();
+    const componentA = new Component('testComponentA', {});
+    const componentB = new Component('testComponentB', {});
+    const componentC = new Component('testComponentC', {});
+    const validComponentsArray = [componentA, componentB, componentC];
+    const componentTypesArray = ['testComponentA', 'testComponentB', 'testComponentC'];
+    entity.addComponents(validComponentsArray);
+    expect(entity.getComponentsOfTypes(componentTypesArray)).toEqual(validComponentsArray);
+  })
+});
+
+describe('removeComponent', () => {
+  test('removes component that it has', () => {
+    const entity = new Entity();
+    const component = new Component('testComponent', {});
+    entity.addComponent(component);
+    expect(entity.hasComponent(component)).toBe(true);
+    entity.removeComponent(component);
+    expect(entity.hasComponent(component)).toBe(false);
+  });
+
+  test('does not remove components that are not passed', () => {
+    const entity = new Entity();
+    const componentA = new Component('testComponentA', {});
+    const componentB = new Component('testComponentB', {});
+    entity.addComponents([componentA, componentB]);
+    expect(entity.hasComponents([componentA, componentB])).toBe(true);
+    entity.removeComponent(componentA);
+    expect(entity.hasComponent(componentA)).toBe(false);
+    expect(entity.hasComponent(componentB)).toBe(true);
+  });
+  
+  test('does nothing when passed invalid component', () => {
+    const entity = new Entity();
+    const invalidComponent = {};
+    entity.addComponent(invalidComponent);
+    expect(entity.hasComponent(invalidComponent)).toBe(false);
+    entity.removeComponent(invalidComponent);
+    expect(entity.hasComponent(invalidComponent)).toBe(false);
+  });
+
+  test('does nothing for component it does not have', () => {
+    const entity = new Entity();
+    const componentA = new Component('testComponentA', {});
+    const componentB = new Component('testComponentB', {});
+    entity.addComponent(componentA);
+    expect(entity.hasComponent(componentA)).toBe(true);
+    entity.removeComponent(componentB);
+    expect(entity.hasComponent(componentA)).toBe(true);
+    expect(entity.hasComponent(componentB)).toBe(false);
+  });
+});
+
+describe('removeComponents', () => {
+  test('does nothing for non-arrays', () => {
+    const entity = new Entity();
+    const component = new Component('testComponent', {});
+    const invalidComponentArray = { a: 'a', b: 'b' };
+    entity.addComponent(component);
+    entity.removeComponents(invalidComponentArray);
+    expect(entity.hasComponent(component)).toBe(true);
+  });
+
+  test('does nothing for invalid components', () => {
+    const entity = new Entity();
+    const component = new Component('testComponent', {});
+    const invalidComponent = {};
+    entity.addComponent(component);
+    entity.removeComponents([invalidComponent]);
+    expect(entity.hasComponent(component)).toBe(true);
+    expect(entity.hasComponent(invalidComponent)).toBe(false);
+  });
+
+  test('removes valid components it contains', () => {
+    const entity = new Entity();
+    const componentA = new Component('testComponentA', {});
+    const componentB = new Component('testComponentB', {});
+    entity.addComponents([componentA, componentB]);
+    expect(entity.hasComponents([componentA, componentB])).toBe(true);
+    entity.removeComponents([componentA, componentB]);
+    expect(entity.hasComponents([componentA, componentB])).toBe(false);
+  });
+});
+
+/*describe('removeComponentOfType', () => {
+
+});
+
+describe('removeComponentsOfTypes', () => {
+
+});*/
