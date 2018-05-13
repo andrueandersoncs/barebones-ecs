@@ -8,7 +8,11 @@ class Component {
   }
   
   static isValidComponent(component) {
-    return typeof component.type === 'string' && component.type.length > 0;
+    return Component.isValidComponentType(component.type);
+  }
+
+  static isValidComponentType(type) {
+    return typeof type === 'string' && type.length > 0;
   }
 }
 

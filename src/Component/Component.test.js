@@ -10,8 +10,11 @@ describe('constructor', () => {
     }
   });
 
-  /* maybe only allow primitives as properties to a component?
-  // this would mean no memory leaks, no dangling references
+  /* Maybe only allow primitives as properties to a component?
+  // Pro: no memory leaks
+  // Pro: no dangling references
+  // Con: components could not hold references to other components
+  // Con: components could not hold references to objects / complex types
   test('allows only primitives as properties', () => {
     for (let key in properties) {
       expect(typeof component[key] !== 'object').toBe(true);
