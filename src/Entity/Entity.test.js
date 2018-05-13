@@ -21,11 +21,20 @@ describe('constructor', () => {
     const entity = new Entity(false, testComponents);
     expect(entity.components).toBe(testComponents);
   });
+
+  test('throws if invalid id of non-string type is given', () => {
+    const invalidId = 1234;
+    expect(() => new Entity(invalidId)).toThrow();
+
+    const anotherInvalidId = {};
+    expect(() => new Entity(anotherInvalidId)).toThrow();
+  })
 });
 
 describe('isValidEntity', () => {
   const validEntity = new Entity();
   const invalidEntity = {};
+  const anotherInvalidEntity = { id: '' };
 
   test('valid entity is valid', () => {
     expect(Entity.isValidEntity(validEntity)).toBe(true);
@@ -33,25 +42,77 @@ describe('isValidEntity', () => {
 
   test('invalid entity is invalid', () => {
     expect(Entity.isValidEntity(invalidEntity)).toBe(false);
+    expect(Entity.isValidEntity(anotherInvalidEntity)).toBe(false);
   });
 });
 
 
 describe('addComponent', () => {
-  const entity = new Entity();
-  const component = new Component('testComponent', {});
-  entity.addComponent(component);
-
-  test('component is added', () => {
+  test('valid component is added', () => {
+    const entity = new Entity();
+    const component = new Component('testComponent', {});
+    entity.addComponent(component);
     expect(entity.components[component.type]).toBeDefined();
+  });
+
+  test('invalid component is not added', () => {
+    const entity = new Entity();
+    const component = false;
+    const lengthBefore = Object.keys(entity.components).length;
+    entity.addComponent(component);
+    const lengthAfter = Object.keys(entity.components).length;
+    expect(lengthAfter).toEqual(lengthBefore);
+  });
+
+  test('only one component of a type can be added', () => {
+    const entity = new Entity();
+    const component = new Component('testComponent', { real: true });
+    const otherComponent = new Component('testComponent', { real: false });
+    entity.addComponent(component);
+    entity.addComponent(otherComponent);
+    expect(entity.components['testComponent']).toEqual(component);
+    expect(entity.components['testComponent']).not.toEqual(otherComponent);
   });
 });
 
-test('hasComponentOfType', () => {
-  const entity = new Entity();
-  const component = new Component('testComponent', {});
-  entity.addComponent(component);
-  expect(entity.hasComponentOfType('testComponent')).toBe(true);
-  expect(entity.hasComponentOfType('invalidType')).toBe(false);
+describe('hasComponent', () => {
+  test('returns true if entity has component', () => {
+    const entity = new Entity();
+    const component = new Component('testComponent', {});
+    entity.addComponent(component);
+    expect(entity.hasComponent(component)).toBe(true);
+  });
+
+  test('returns false if entity does not have component', () => {
+    const entity = new Entity();
+    const component = new Component('testComponent', {});
+    expect(entity.hasComponent(component)).toBe(false);
+  });
+
+  test('returns false if component is invalid', () => {
+    const entity = new Entity();
+    const component = {};
+    expect(entity.hasComponent(component)).toBe(false);
+  });
+});
+
+describe('hasComponentOfType', () => {
+  test('returns true if entity has component of that type', () => {
+    const entity = new Entity();
+    const component = new Component('testComponent', {});
+    entity.addComponent(component);
+    expect(entity.hasComponentOfType('testComponent')).toBe(true);
+  });
+
+  test('returns false if type is not a valid type', () => {
+    const entity = new Entity();
+    const invalidType = false;
+    expect(entity.hasComponentOfType(invalidType)).toBe(false);
+  })
+  
+  test('returns false if component does not have entity of type', () => {
+    const entity = new Entity();
+    expect(entity.hasComponentOfType('testComponent')).toBe(false);
+  });
 });
 
