@@ -1,0 +1,30 @@
+{
+  "name": "barebones-ecs",
+  "version": "0.0.1",
+  "description": "A barebones Entity Component System framework",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-plugin-module-resolver": "^3.1.1",
+    "babel-preset-env": "^1.7.0",
+    "jest": "^22.4.3"
+  },
+  "scripts": {
+    "build": "babel src -d lib",
+    "test": "npm run build && jest lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andrueandersoncs/barebones-ecs.git"
+  },
+  "keywords": [
+    "ecs"
+  ],
+  "author": "Andrue Anderson",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/andrueandersoncs/barebones-ecs/issues"
+  },
+  "homepage": "https://github.com/andrueandersoncs/barebones-ecs#readme"
+}
