@@ -9,6 +9,7 @@ class Engine {
   createEntity() {
     const entity = new Entity();
     this.entities[entity.id] = entity;
+    this.systems.forEach(system => system.onEntityCreated(entity));
     return entity;
   }
 
@@ -19,6 +20,8 @@ class Engine {
 
   destroyEntityById(id) {
     if (!this.entityIdExists(id)) return;
+    const entity = this.entities[id];
+    this.systems.forEach(system => system.onEntityDestroyed(entity));
     this.entities[id] = undefined;
   }
 
