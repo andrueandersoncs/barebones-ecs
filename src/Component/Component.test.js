@@ -9,6 +9,14 @@ describe('constructor', () => {
       expect(component[key] === properties[key]).toBe(true);
     }
   });
+
+  /* maybe only allow primitives as properties to a component?
+  // this would mean no memory leaks, no dangling references
+  test('allows only primitives as properties', () => {
+    for (let key in properties) {
+      expect(typeof component[key] !== 'object').toBe(true);
+    }
+  }); */
 });
 
 describe('isValidComponent', () => {

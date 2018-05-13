@@ -7,8 +7,8 @@ class Component {
     }
   }
   
-  static isValidComponent(candidate) {
-    return typeof candidate.type === 'string';
+  static isValidComponent(component) {
+    return typeof component.type === 'string' && component.type.length > 0;
   }
 }
 

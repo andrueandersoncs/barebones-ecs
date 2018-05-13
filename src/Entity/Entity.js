@@ -4,11 +4,20 @@ import Component from 'Component';
 class Entity {
   constructor(id, components) {
     this.id = id || uuid();
+
+    if (!Entity.isValidEntity(this))
+      throw 'Invalid entity constructed!';
+
     this.components = components || {};
+
+    for (let key in this.components) {
+      if (!Component.isValidComponent(this.components[key]))
+        throw 'Invalid component in entity constructor!';
+    }
   }
 
   static isValidEntity(entity) {
-    return typeof entity.id === 'string';
+    return typeof entity.id === 'string' && entity.id.length > 0;
   }
 
   addComponent(component) {
