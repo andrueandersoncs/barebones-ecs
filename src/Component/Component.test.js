@@ -35,3 +35,15 @@ describe('isValidComponent', () => {
   });
 });
 
+describe('isValidComponentType', () => {
+  test('returns true if passed valid component type', () => {
+    expect(Component.isValidComponentType('testComponent')).toBe(true);
+  });
+
+  test('returns false if passed anything other than valid component type', () => {
+    expect(Component.isValidComponentType({})).toBe(false);
+    expect(Component.isValidComponentType(1234)).toBe(false);
+    expect(Component.isValidComponentType(false)).toBe(false);
+    expect(Component.isValidComponentType([])).toBe(false);
+  });
+});

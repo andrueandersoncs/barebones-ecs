@@ -1,9 +1,23 @@
-import Entity from './Entity';
+import Entity from 'Entity';
+import System from 'System';
 
 class Engine {
   constructor(entities, systems) {
+    if (Array.isArray(entities) || (typeof entities !== 'object' && typeof entities !== 'undefined'))
+      throw 'Entities object passed into Engine constructor as non-object!';
+
     this.entities = entities || {};
+    
+    for (let id in this.entities) {
+      if (!Entity.isValidEntity(this.entities[id]))
+        delete this.entities[id];
+    }
+
+    if (!Array.isArray(systems) && typeof systems !== 'undefined')
+      throw 'Systems passed into Engine constructor must be an array!';
+
     this.systems = systems || [];
+    this.systems = this.systems.filter(system => system instanceof System);
   }
 
   createEntity() {
