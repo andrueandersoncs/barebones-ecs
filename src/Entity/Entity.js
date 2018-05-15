@@ -17,7 +17,11 @@ class Entity {
   }
 
   static isValidEntity(entity) {
-    return typeof entity.id === 'string' && entity.id.length > 0;
+    return Entity.isValidEntityId(entity.id);
+  }
+
+  static isValidEntityId(id) {
+    return typeof id === 'string' && id.length > 0;
   }
 
   addComponent(component) {

@@ -33,19 +33,19 @@ class Engine {
   }
 
   destroyEntityById(id) {
-    if (!this.entityIdExists(id)) return;
+    if (!this.hasEntityById(id)) return;
     const entity = this.entities[id];
     this.systems.forEach(system => system.onEntityDestroyed(entity));
     this.entities[id] = undefined;
   }
 
-  entityExists(entity) {
+  hasEntity(entity) {
     if (!Entity.isValidEntity(entity)) return false;
-    return this.entityIdExists(entity.id);
+    return this.hasEntityById(entity.id);
   }
 
-  entityIdExists(id) {
-    return typeof this.entities[id] !== 'undefined';
+  hasEntityById(id) {
+    return Entity.isValidEntityId(id) && typeof this.entities[id] !== 'undefined';
   }
 
   start() {
