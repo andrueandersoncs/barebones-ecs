@@ -1,47 +1,70 @@
 import Entity from 'Entity';
 import Component from 'Component';
+import Observable from 'Observable';
 
-// maybe refactor this as a map of messages to handlers?
-class System {
-  constructor(requiredComponentTypes, onUpdate) {
+/*
+Emits: (None)
+
+Handles:
+- entityCreated -> possibly cache entity for event handling?
+  : this could be a bad way to do it, instead pass all relevant entities
+  : with the event. then systems become basically just event handlers
+- entityDestroyed
+- engineConstructed
+*/
+class System extends Observable {
+  constructor(requiredComponentTypes, eventHandlers) {
+    super();
+
     this.entities = new Map();
 
-    if (typeof requiredComponentTypes !== 'undefined' && !Array.isArray(requiredComponentTypes))
-      throw 'System constructed with requiredComponentTypes that is not an array!';
-    
     this.required = requiredComponentTypes || [];
-    this.required = this.required.filter(required => Component.isValidComponentType(required));
+
+    if (!System.isValidComponentTypesArray(requiredComponentTypes))
+      throw 'System constructed with invalid requiredComponentTypes!';
     
-    if (typeof onUpdate !== 'undefined' && typeof onUpdate !== 'function')
-      throw 'System constructed with onUpdate that is not a function!';
-    
-    this.onUpdate = onUpdate || function() {};
+    this.on('entityCreated', this.onEntityCreated.bind(this));
+    this.on('entityDestroyed', this.onEntityDestroyed.bind(this));
+    this.on('engineConstructed', this.onEngineConstructed.bind(this));
+
+    eventHandlers = eventHandlers || {};
+
+    if (!System.isValidEventHandlersMap(eventHandlers))
+      throw 'System constructed with invalid eventHandlers map!';
+
+    for (let type in eventHandlers) {
+      this.on(type, eventHandlers[type]);
+    }
   }
 
-  // maybe allow callbacks when an entity is created for initialization?
+  static isValidComponentTypesArray(typesArray) {
+    return Array.isArray(typesArray) &&
+      typesArray.every(type => Component.isValidComponentType(type));
+  }
+
+  static isValidEventHandlersMap(eventHandlers) {
+    return !Array.isArray(eventHandlers) &&
+      typeof eventHandlers === 'object' &&
+      Object.keys(eventHandlers).every(key => typeof eventHandlers[key] === 'function');
+  }
+
   onEntityCreated(entity) {
-    if (!Entity.isValidEntity(entity)) return;
-    if (!entity.hasComponentsOfTypes(this.required)) return;
-    this.entities.set(entity.id, entity);
+    if (!Entity.isValidEntity(entity))
+      throw 'Invalid entity passed in entityCreated event!';
+
+    if (entity.hasComponentsOfTypes(this.required))
+      this.entities.set(entity.id, entity);
   }
 
-  // maybe allow callbacks when an entity is destroyed for cleanup?
   onEntityDestroyed(entity) {
-    if (!Entity.isValidEntity(entity)) return;
+    if (!Entity.isValidEntity(entity))
+      throw 'Invalid entity passed in entityDestroyed event!';
+
     this.entities.delete(entity.id);
   }
 
-  // maybe allow multiple callbacks when update is called?
-  update() {
-    this.entities.forEach(entity => {
-
-      if (!entity.hasComponentsOfTypes(this.required)) {
-        this.entities.delete(entity.id);
-      }
-
-      const components = entity.getComponentsOfTypes(this.required);
-      this.onUpdate(components);
-    });
+  onEngineConstructed(engine) {
+    this.engine = engine;
   }
 }
 

@@ -3,63 +3,71 @@ import System from 'System';
 
 class Engine {
   constructor(entities, systems) {
-    if (Array.isArray(entities) || (typeof entities !== 'object' && typeof entities !== 'undefined'))
-      throw 'Entities object passed into Engine constructor as non-object!';
+    if (systems && !Engine.isValidSystemsArray(systems))
+      throw 'Invalid systems array passed to engine constructor!';
 
-    this.entities = entities || {};
-    
-    for (let id in this.entities) {
-      if (!Entity.isValidEntity(this.entities[id]))
-        delete this.entities[id];
-    }
-
-    if (!Array.isArray(systems) && typeof systems !== 'undefined')
-      throw 'Systems passed into Engine constructor must be an array!';
+    if (entities && !Engine.isValidEntitiesMap(entities))
+      throw 'Invalid entities object passed to engine constructor!';
 
     this.systems = systems || [];
-    this.systems = this.systems.filter(system => system instanceof System);
+    this.systems.forEach(system => system.emit('engineConstructed', this));
+
+    this.entities = entities || {};
+    Object.keys(this.entities)
+      .forEach(id => this.systems
+        .forEach(system => system.emit('entityCreated', this.entities[id])))
   }
 
-  createEntity() {
-    const entity = new Entity();
+  static isValidEntitiesMap(entities) {
+    return !Array.isArray(entities) &&
+      typeof entities === 'object' &&
+      Object.keys(entities).every(id => Entity.isValidEntity(entities[id]));
+  }
+
+  static isValidSystemsArray(systems) {
+    return Array.isArray(systems);
+  }
+
+  createEntity(components) {
+    if (!Entity.isValidComponentsMap(components))
+      throw 'Invalid components map was passed to createEntity!';
+
+    const entity = new Entity(false, components);
     this.entities[entity.id] = entity;
-    this.systems.forEach(system => system.onEntityCreated(entity));
+    this.systems.forEach(system => system.emit('entityCreated', entity));
     return entity;
   }
 
   destroyEntity(entity) {
-    if (!Entity.isValidEntity(entity)) return;
+    if (!Entity.isValidEntity(entity))
+      throw 'Invalid entity was passed to destroyEntity!';
+
     this.destroyEntityById(entity.id);
   }
 
   destroyEntityById(id) {
+    if (!Entity.isValidEntityId(id))
+      throw 'Invalid entity id was passed to destroyEntityById!';
+
     if (!this.hasEntityById(id)) return;
+
     const entity = this.entities[id];
-    this.systems.forEach(system => system.onEntityDestroyed(entity));
+    this.systems.forEach(system => system.emit('entityDestroyed', entity));
     this.entities[id] = undefined;
   }
 
   hasEntity(entity) {
-    if (!Entity.isValidEntity(entity)) return false;
+    if (!Entity.isValidEntity(entity))
+      throw 'Invalid entity was passed to hasEntity!';
+
     return this.hasEntityById(entity.id);
   }
 
   hasEntityById(id) {
-    return Entity.isValidEntityId(id) && typeof this.entities[id] !== 'undefined';
-  }
+    if (!Entity.isValidEntityId(id))
+      throw 'Invalid entity id was passed to hasEntityById!';
 
-  start() {
-    for (let id in this.entities) {
-      let entity = this.entities[id];
-      this.systems.forEach(system => {
-        system.onEntityCreated(entity);
-      });
-    }
-  }
-
-  update() {
-    window.requestAnimationFrame(this.update.bind(this));
-    this.systems.forEach(system => system.update());
+    return typeof this.entities[id] !== 'undefined';
   }
 }
 

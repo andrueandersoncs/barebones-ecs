@@ -22,6 +22,18 @@ describe('constructor', () => {
       const system = new System(false, invalidOnUpdate);
     }).toThrow();
   });
+
+  test('registers all passed event handlers', () => {
+    const eventHandlers = {
+      engineConstructed: jest.fn(),
+      testEvent: jest.fn()
+    };
+    const system = new System(undefined, eventHandlers);
+    const engine = new Engine(undefined, [system]);
+    expect(eventHandlers.engineConstructed).toHaveBeenCalled();
+    system.emit('testEvent');
+    expect(eventHandlers.testEvent).toHaveBeenCalled();
+  });
 });
 
 describe('onEntityCreated', () => {
@@ -80,5 +92,21 @@ describe('onEntityDestroyed', () => {
     system.onEntityDestroyed(entityA);
     expect(system.entities.size).toBe(1);
     expect(system.entities.get(entityB.id)).toBeDefined();
+  });
+});
+
+describe('onEngineConstructed', () => {
+  test('engine is registered', () => {
+    const system = new System();
+    const engine = new Engine(undefined, [system]);
+    expect(system.engine).toBeDefined();
+  });
+
+  test('cannot be registered to two engines simultaneously', () => {
+    expect(() => {
+      const system = new System();
+      const engineA = new Engine(undefined, [system]);
+      const engineB = new Engine(undefined, [system]);
+    }).toThrow();
   });
 });

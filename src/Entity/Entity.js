@@ -1,19 +1,27 @@
 import uuid from 'uuid';
 import Component from 'Component';
+import Observable from 'Observable';
 
-class Entity {
+/*
+Emits:
+- componentAdded
+- componentRemoved
+
+Handles: (None)
+*/
+
+class Entity extends Observable {
   constructor(id, components) {
+    super();
+
+    if (id && !Entity.isValidEntityId(id))
+      throw 'Invalid entity id passed to entity constructor!';
+
+    if (components && !Entity.isValidComponentsMap(components))
+      throw 'Invalid components map passed to entity constructor!';
+
     this.id = id || uuid();
-
-    if (!Entity.isValidEntity(this))
-      throw 'Invalid entity constructed!';
-
     this.components = components || {};
-
-    for (let key in this.components) {
-      if (!Component.isValidComponent(this.components[key]))
-        throw 'Invalid component in entity constructor!';
-    }
   }
 
   static isValidEntity(entity) {
@@ -24,63 +32,102 @@ class Entity {
     return typeof id === 'string' && id.length > 0;
   }
 
+  static isValidComponentsMap(components) {
+    return Object.keys(components)
+      .every(type => Component.isValidComponent(components[type]));
+  }
+
   addComponent(component) {
-    if (!Component.isValidComponent(component)) return;
+    if (!Component.isValidComponent(component))
+      throw 'Invalid component passed to addComponent!';
+
     if (this.hasComponent(component)) return;
     this.components[component.type] = component;
+    this.emit('componentAdded', component);
   }
 
   addComponents(components) {
-    if (!Array.isArray(components)) return;
+    if (!Array.isArray(components))
+      throw 'addComponents must be passed an array!';
+
     components.forEach(component => this.addComponent(component));
   }
 
   hasComponent(component) {
-    if (!Component.isValidComponent(component)) return false;
+    if (!Component.isValidComponent(component))
+      throw 'Invalid component passed to hasComponent!';
+
     return this.hasComponentOfType(component.type);
   }
 
   hasComponents(components) {
-    if (!Array.isArray(components)) return false;
+    if (!Array.isArray(components))
+      throw 'hasComponents must be passed an array!';
+
     return components.every(component => this.hasComponent(component));
   }
 
   hasComponentOfType(type) {
-    return typeof type === 'string' && typeof this.components[type] !== 'undefined';
+    if (!Component.isValidComponentType(type))
+      throw 'Invalid component type was passed to hasComponentOfType!';
+  
+    return typeof this.components[type] !== 'undefined';
   }
 
   hasComponentsOfTypes(types) {
-    if (!Array.isArray(types)) return false;
+    if (!Array.isArray(types))
+      throw 'hasComponentsOfTypes must be passed an array!';
+
     return types.every(type => this.hasComponentOfType(type));
   }
 
   getComponentOfType(type) {
-    if (!this.hasComponentOfType(type)) return null;
+    if (!Component.isValidComponentType(type))
+      throw 'Invalid component type was passed to getComponentOfType!';
+
+    if (!this.hasComponentOfType(type))
+      throw 'getComponentOfType was attempted on a type that was not had!';
+
     return this.components[type];
   }
 
   getComponentsOfTypes(types) {
-    if (!Array.isArray(types)) return [];
+    if (!Array.isArray(types))
+      throw 'getComponentsOfTypes must be passed an array!';
+
     return types.map(type => this.getComponentOfType(type));
   }
 
   removeComponent(component) {
-    if (!this.hasComponent(component)) return;
-    this.components[component.type] = undefined;
+    if (!Component.isValidComponent(component))
+      throw 'removeComponent was passed an invalid component!';
+
+    this.removeComponentOfType(component.type);
   }
 
   removeComponents(components) {
-    if (!Array.isArray(components)) return;
+    if (!Array.isArray(components))
+      throw 'removeComponents must be passed an array!';
+
     components.forEach(component => this.removeComponent(component));
   }
 
   removeComponentOfType(type) {
-    if (!this.hasComponentOfType(type)) return;
+    if (!Component.isValidComponentType(type))
+      throw 'removeComponentOfType was passed an invalid type!';
+
+    if (!this.hasComponentOfType(type))
+      throw 'Attempted to remove a component of type that was not had!';
+
+    const component = this.getComponentOfType(type);
     this.components[type] = undefined;
+    this.emit('componentRemoved', component);
   }
 
   removeComponentsOfTypes(types) {
-    if (!Array.isArray(types)) return;
+    if (!Array.isArray(types))
+      throw 'removeComponentsOfTypes must be passed an array!';
+
     types.forEach(type => this.removeComponentOfType(type));
   }
 }
